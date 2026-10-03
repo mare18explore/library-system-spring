@@ -1,0 +1,27 @@
+### register a member
+POST http://localhost:8080/api/members
+Content-Type: application/json
+
+{
+  "name": "Abdi",
+  "email": "abdi@example.com",
+  "password": "supersecret"
+}
+
+### log in with the right password, should return the member
+POST http://localhost:8080/api/members/login
+Content-Type: application/json
+
+{
+  "email": "abdi@example.com",
+  "password": "supersecret"
+}
+
+### log in with the wrong password, should return 401
+POST http://localhost:8080/api/members/login
+Content-Type: application/json
+
+{
+  "email": "abdi@example.com",
+  "password": "wrongpassword"
+}
