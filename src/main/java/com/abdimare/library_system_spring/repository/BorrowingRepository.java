@@ -12,4 +12,7 @@ public interface BorrowingRepository extends JpaRepository<Borrowing, Long> {
 
     // a borrowing with no return date means the book is still checked out
     Optional<Borrowing> findByBookIdAndReturnedAtIsNull(Long bookId);
+
+       // used to check that a member actually borrowed a book before letting them review it
+    boolean existsByBookIdAndMemberId(Long bookId, Long memberId);
 }

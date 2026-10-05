@@ -64,3 +64,27 @@ POST http://localhost:8080/api/borrowings/1/return
 
 ### list member 1's borrowings
 GET http://localhost:8080/api/borrowings?memberId=1
+
+### review book 1 as member 1
+POST http://localhost:8080/api/reviews
+Content-Type: application/json
+
+{
+  "bookId": 1,
+  "memberId": 1,
+  "rating": 5,
+  "comment": "A classic"
+}
+
+### review with a rating of 9, should be rejected with a 400
+POST http://localhost:8080/api/reviews
+Content-Type: application/json
+
+{
+  "bookId": 1,
+  "memberId": 1,
+  "rating": 9
+}
+
+### list reviews for book 1
+GET http://localhost:8080/api/reviews?bookId=1
