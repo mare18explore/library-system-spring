@@ -1,0 +1,102 @@
+# Library System (Spring Boot)
+
+A REST API for a small library: books, members, borrowings, and reviews, built with Java 21 and Spring Boot.
+
+This is the third time I've built this system. The first version was a Python command-line app, the second was a C# / ASP.NET Core Web API, and this one is Java with Spring Boot. I wanted to see how each stack handles the same problems, and to get hands-on with Spring since so many backend jobs use it.
+
+- Python version: [library-system-cli](https://github.com/mare18explore/library-system-cli)
+- C# version: [library-system-dotnet](https://github.com/mare18explore/library-system-dotnet)
+
+## Tech stack
+
+- Java 21, Spring Boot 4
+- Spring Web for the REST API
+- Spring Data JPA / Hibernate for the database layer
+- H2 in-memory database for development
+- Jakarta Validation for request validation
+- BCrypt (Spring Security Crypto) for password hashing
+- JUnit 5 and AssertJ for tests
+
+## What it does
+
+- Books: add, update, delete, list, search by title, and list what's available
+- Members: register and log in, with passwords hashed using BCrypt
+- Borrowings: borrow and return books, and see a member's history
+- Reviews: rate a book from 1 to 5 with an optional comment
+
+A few rules the API enforces:
+
+- You can't borrow a book that's already checked out
+- A borrowing can only be returned once
+- You can only review a book you've actually borrowed
+- Ratings have to be between 1 and 5
+- Two members can't sign up with the same email
+
+Borrowing and returning are `@Transactional`, so the borrowing record and the book's availability always change together. If one part fails, neither gets saved.
+
+## API endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/books` | List all books, or search with `?title=` |
+| GET | `/api/books/available` | List books that aren't checked out |
+| GET | `/api/books/{id}` | Get one book |
+| POST | `/api/books` | Add a book |
+| PUT | `/api/books/{id}` | Update a book |
+| DELETE | `/api/books/{id}` | Delete a book |
+| POST | `/api/members` | Register a member |
+| POST | `/api/members/login` | Log in |
+| GET | `/api/members` | List members |
+| GET | `/api/members/{id}` | Get one member |
+| POST | `/api/borrowings` | Borrow a book |
+| POST | `/api/borrowings/{id}/return` | Return a book |
+| GET | `/api/borrowings` | List borrowings, or filter with `?memberId=` |
+| POST | `/api/reviews` | Review a book |
+| GET | `/api/reviews?bookId=` | List reviews for a book |
+
+There are example requests for every endpoint in [`requests.http`](requests.http). If you have the REST Client extension in VS Code, you can run them straight from the file.
+
+## Running it
+
+You'll need Java 21.
+
+```bash
+./mvnw spring-boot:run
+```
+
+The API runs at `http://localhost:8080`. You can look inside the database at `http://localhost:8080/h2-console` (JDBC URL `jdbc:h2:mem:library`, user `sa`, no password). It's an in-memory database, so everything resets when the app restarts.
+
+## Tests
+
+```bash
+./mvnw test
+```
+
+The tests start the real app with the H2 database and check the borrowing and review rules. Each test runs inside a transaction that gets rolled back at the end, so every test starts with an empty database.
+
+Registration takes a plain password through its own request class and only ever saves the hash, so the API never accepts a hash directly. The hash is also marked with `@JsonIgnore` on the `Member` entity, so it never shows up in a response.
+
+All the error handling lives in one `@RestControllerAdvice` class. Validation failures, missing records, and broken rules come back as `400`, `404`, and `409` responses with a message saying what went wrong, instead of a generic error.
+
+## Comparing the three versions
+
+| | Python CLI | C# / ASP.NET Core | Java / Spring Boot |
+|---|---|---|---|
+| Interface | Command line | REST API | REST API |
+| Database | SQLite with raw SQL | SQLite with Entity Framework Core | H2 with Spring Data JPA |
+| Password hashing | bcrypt | PBKDF2 | BCrypt |
+| Relationships | Foreign keys in SQL | Foreign key IDs on models | JPA `@ManyToOne` relationships |
+| Business logic | In the app code | In the controllers | In a separate service layer |
+
+The biggest difference was how much Spring Data JPA does for you. A method like `findByTitleContainingIgnoreCase` gets turned into a SQL query just from its name, where in the Python version I wrote every query by hand.
+
+## Things I ran into
+
+- My first run started up and then immediately shut down. I'd left out the Spring Web dependency, so there was no web server to keep it running.
+- Java is strict about folders matching package names. I put a few files in the wrong folder and got a pile of confusing errors before I figured out the folder path has to match the `package` line exactly.
+- In the tests, I noticed the borrow tests never logged an `update book` query, even though they passed. Because each test is rolled back, Hibernate keeps the change in memory and never sends it to the database. The assertions still pass because they read from that same in-memory state.
+
+## What's next
+
+- Switch from H2 to PostgreSQL running in Docker so data sticks around between restarts
+- Add controller tests with MockMvc

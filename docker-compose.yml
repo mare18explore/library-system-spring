@@ -1,0 +1,17 @@
+# starts a postgres database in a container, run with: docker compose up -d db
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: library
+      POSTGRES_USER: library
+      # fine for local development only, a real deployment would use a secret
+      POSTGRES_PASSWORD: library
+    ports:
+      - "5432:5432"
+    volumes:
+      # keeps the data on your machine, so it survives restarting the container
+      - library-data:/var/lib/postgresql/data
+
+volumes:
+  library-data:
