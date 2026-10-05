@@ -1,3 +1,27 @@
+### list all books
+GET http://localhost:8080/api/books
+
+### search by title
+GET http://localhost:8080/api/books?title=dun
+
+### add a book
+POST http://localhost:8080/api/books
+Content-Type: application/json
+
+{
+  "title": "Dune",
+  "author": "Frank Herbert",
+  "isbn": "9780441013593"
+}
+
+### add a book with no title, should be rejected with a 400
+POST http://localhost:8080/api/books
+Content-Type: application/json
+
+{
+  "author": "Nobody"
+}
+
 ### register a member
 POST http://localhost:8080/api/members
 Content-Type: application/json
@@ -25,3 +49,18 @@ Content-Type: application/json
   "email": "abdi@example.com",
   "password": "wrongpassword"
 }
+
+### borrow book 1 as member 1
+POST http://localhost:8080/api/borrowings
+Content-Type: application/json
+
+{
+  "bookId": 1,
+  "memberId": 1
+}
+
+### return borrowing 1
+POST http://localhost:8080/api/borrowings/1/return
+
+### list member 1's borrowings
+GET http://localhost:8080/api/borrowings?memberId=1
