@@ -96,7 +96,17 @@ The biggest difference was how much Spring Data JPA does for you. A method like 
 - Java is strict about folders matching package names. I put a few files in the wrong folder and got a pile of confusing errors before I figured out the folder path has to match the `package` line exactly.
 - In the tests, I noticed the borrow tests never logged an `update book` query, even though they passed. Because each test is rolled back, Hibernate keeps the change in memory and never sends it to the database. The assertions still pass because they read from that same in-memory state.
 
-## What's next
+The easiest way to run everything is with Docker:
 
-- Switch from H2 to PostgreSQL running in Docker so data sticks around between restarts
-- Add controller tests with MockMvc
+```bash
+docker compose up --build
+```
+
+That starts PostgreSQL and the app together, with the API at `http://localhost:8080`.
+
+To run just the database in Docker and the app from your machine:
+
+```bash
+docker compose up -d db
+./mvnw spring-boot:run
+```
