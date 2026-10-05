@@ -1,4 +1,4 @@
-# starts a postgres database in a container, run with: docker compose up -d db
+# starts the whole project with one command: docker compose up
 services:
   db:
     image: postgres:17
@@ -12,6 +12,25 @@ services:
     volumes:
       # keeps the data on your machine, so it survives restarting the container
       - library-data:/var/lib/postgresql/data
+    # the app waits for this check to pass before it starts, otherwise it tries to connect too early
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U library -d library"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # "db" is the container name, docker's internal network resolves it like a hostname
+      DB_URL: jdbc:postgresql://db:5432/library
+      DB_USERNAME: library
+      DB_PASSWORD: library
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   library-data:
